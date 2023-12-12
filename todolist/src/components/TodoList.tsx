@@ -1,16 +1,19 @@
+/* eslint-disable array-callback-return */
 import React, { FormEvent, useState } from 'react';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
+import TodoItem from './TodoItem';
+import { v4 as uuidv4 } from 'uuid';
 
-interface IInitTodo {
-	id: number;
+interface ITodo {
+	id: string;
 	title: string;
 }
 
 export default function TodoList() {
-	const [todoList, setTodoList] = useState<IInitTodo[]>([
-		{ id: 0, title: '잠자기' },
-		{ id: 1, title: '놀기' },
+	const [todoList, setTodoList] = useState<ITodo[]>([
+		{ id: '0', title: '잠자기' },
+		{ id: '1', title: '놀기' },
 	]);
 	const [addModalIsOpen, setAddModalIsOpen] = useState<boolean>(false);
 
@@ -25,15 +28,14 @@ export default function TodoList() {
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const inputField = (e.currentTarget as HTMLFormElement).querySelector('input');
-		const todoId = todoList.length;
 		if (inputField instanceof HTMLInputElement) {
-			const newTodo = { id: todoId, title: inputField.value };
+			const newTodo = { id: uuidv4(), title: inputField.value };
 			setTodoList([...todoList, newTodo]);
 			addCloseModal();
 		}
 	};
 
-	const delOpenSwal = (todoItem: IInitTodo) => {
+	const delOpenSwal = (todoItem: ITodo) => {
 		Swal.fire({
 			title: '삭제',
 			text: '[' + todoItem.title + '] 항목을 삭제하겠습니까?',
@@ -48,15 +50,41 @@ export default function TodoList() {
 		});
 	};
 
+	const findTodoItem = (id: string) => {
+		if (todoList.length > 0) {
+			const todoItem = todoList.filter((item) => item.id === id)[0];
+			return {
+				todoItem,
+				index: todoList.indexOf(todoItem),
+			};
+		}
+	};
+
+	const moveTodoItem = (id: string, atIndex: number) => {
+		const result = findTodoItem(id);
+		if (result && typeof result.index !== 'undefined') {
+			const { index } = result;
+			const updatedList = [...todoList];
+			const itemToMove = updatedList.splice(index, 1)[0];
+			updatedList.splice(atIndex, 0, itemToMove);
+			setTodoList(updatedList);
+		}
+	};
+
 	return (
 		<div>
 			<section>내가할일</section>
 			<button onClick={addOpenModal}>add</button>
 			{todoList.map((todoItem) => (
-				<li key={todoItem.id}>
-					{todoItem.id} {todoItem.title}
+				<div key={todoItem.id}>
+					<TodoItem
+						id={todoItem.id}
+						title={todoItem.title}
+						moveTodoItem={(id: string, atIndex: number) => moveTodoItem(id, atIndex)}
+						findTodoItem={findTodoItem}
+					/>
 					<button onClick={() => delOpenSwal(todoItem)}>x</button>
-				</li>
+				</div>
 			))}
 			<Modal isOpen={addModalIsOpen} onRequestClose={addCloseModal} ariaHideApp={false}>
 				<h2>내용 추가 모달</h2>
