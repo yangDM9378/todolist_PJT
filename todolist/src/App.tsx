@@ -7,7 +7,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 function App() {
 	return (
 		<div>
-			<div>TodoList 작성 페이지 랍니다</div>
+			<div>TODO</div>
 			<DndProvider backend={HTML5Backend}>
 				<TodoList />
 			</DndProvider>
